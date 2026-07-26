@@ -49,7 +49,28 @@ class PredictPage extends StatefulWidget {
 
 class _PredictPageState extends State<PredictPage> {
   final _formKey = GlobalKey<FormState>();
-  final controllers = {for (var f in fields) f[0] as String: TextEditingController()};
+  static const defaults = {
+    'year': '2015',
+    'infant_deaths': '11.1',
+    'under_five_deaths': '13',
+    'adult_mortality': '105.8',
+    'alcohol_consumption': '1.32',
+    'hepatitis_b': '97',
+    'measles': '65',
+    'bmi': '27.8',
+    'polio': '97',
+    'diphtheria': '97',
+    'incidents_hiv': '0.08',
+    'gdp_per_capita': '11006',
+    'population_mln': '78.53',
+    'thinness_ten_nineteen_years': '4.9',
+    'thinness_five_nine_years': '4.8',
+    'schooling': '7.8',
+  };
+  final controllers = {
+    for (var f in fields)
+      f[0] as String: TextEditingController(text: defaults[f[0] as String] ?? '')
+  };
   String? region;
   int economyDeveloped = 0;
   String result = '';

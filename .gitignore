@@ -4,8 +4,9 @@ __pycache__/
 **/.ipynb_checkpoints/
 *.pyc
 .vscode/
-
 summative/FlutterApp/build/
 summative/FlutterApp/.dart_tool/
 summative/FlutterApp/.flutter-plugins
 summative/FlutterApp/.flutter-plugins-dependencies
+summative/FlutterApp/android/.gradle/
+summative/FlutterApp/android/local.properties
