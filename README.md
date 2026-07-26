@@ -1,6 +1,5 @@
 # Life Expectancy Prediction
-
-People in African countries are not very healthy and this is because of some things that we can measure like how many kids are getting vaccinated how many adults are dying and how many people are going to school.. We do not use these things to make tools that can help us make good decisions for the future. This project makes a computer program that can guess how long people will live based on information from the World Health Organization about health and money. Then it makes this program available on the internet and, on phones so that people can actually use it when they are not sitting at a computer.
+Many African countries face preventable gaps in life expectancy tied to measurable factors like immunization rates, adult mortality, and access to schooling, but this data rarely gets turned into forward-looking tools. This project trains a regression model on WHO health and economic indicators to predict life expectancy, then deploys it as a public API and mobile app so the prediction is usable outside a notebook, not just in a research setting.
 
 Dataset: [Life Expectancy (WHO) Fixed](https://www.kaggle.com/datasets/lashagoch/life-expectancy-who-updated) by lashagoch on Kaggle, 2,864 rows across 21 indicators (mortality, immunization, economic, and social factors) spanning 2000-2015.
 
