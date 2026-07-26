@@ -1,6 +1,5 @@
 # Life Expectancy Prediction
-Many African countries face preventable gaps in life expectancy tied to measurable factors like immunization rates, adult mortality, and access to schooling, but this data rarely gets turned into forward-looking tools. This project trains a regression model on WHO health and economic indicators to predict life expectancy, then deploys it as a public API and mobile app so the prediction is usable outside a notebook, not just in a research setting.
-
+Many African countries face preventable gaps in life expectancy tied to measurable factors like immunization rates, adult mortality, and access to schooling, but this data rarely gets turned into forward-looking tools. This project trains a regression model on WHO health and economic indicators to predict life expectancy, then deploys it as a public API and mobile app so the prediction is usable outside a notebook.
 Dataset: [Life Expectancy (WHO) Fixed](https://www.kaggle.com/datasets/lashagoch/life-expectancy-who-updated) by lashagoch on Kaggle, 2,864 rows across 21 indicators (mortality, immunization, economic, and social factors) spanning 2000-2015.
 
 ## Live API
