@@ -2,319 +2,146 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-void main() {
-  runApp(const LifeExpectancyApp());
-}
+void main() => runApp(const MyApp());
 
-class LifeExpectancyApp extends StatelessWidget {
-  const LifeExpectancyApp({super.key});
-
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Life Expectancy Predictor',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-        useMaterial3: true,
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        ),
-      ),
-      home: const PredictionPage(),
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp(
+        title: 'Life Expectancy Predictor',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(primarySwatch: Colors.teal, useMaterial3: true),
+        home: const PredictPage(),
+      );
 }
 
-class PredictionPage extends StatefulWidget {
-  const PredictionPage({super.key});
+const apiUrl = 'https://linear-regression-life-expectancy.onrender.com/predict';
 
+const fields = [
+  ['year', 'Year', 2000, 2030],
+  ['infant_deaths', 'Infant deaths', 0, 150],
+  ['under_five_deaths', 'Under-five deaths', 0, 230],
+  ['adult_mortality', 'Adult mortality', 0, 750],
+  ['alcohol_consumption', 'Alcohol consumption', 0, 20],
+  ['hepatitis_b', 'Hepatitis B %', 0, 100],
+  ['measles', 'Measles %', 0, 100],
+  ['bmi', 'BMI', 15, 35],
+  ['polio', 'Polio %', 0, 100],
+  ['diphtheria', 'Diphtheria %', 0, 100],
+  ['incidents_hiv', 'HIV incidents', 0, 25],
+  ['gdp_per_capita', 'GDP per capita', 0, 120000],
+  ['population_mln', 'Population (millions)', 0, 1500],
+  ['thinness_ten_nineteen_years', 'Thinness 10-19 yrs %', 0, 30],
+  ['thinness_five_nine_years', 'Thinness 5-9 yrs %', 0, 30],
+  ['schooling', 'Schooling (years)', 0, 16],
+];
+
+const regions = [
+  'Africa', 'Asia', 'Central America and Caribbean', 'European Union',
+  'Middle East', 'North America', 'Oceania', 'Rest of Europe', 'South America'
+];
+
+class PredictPage extends StatefulWidget {
+  const PredictPage({super.key});
   @override
-  State<PredictionPage> createState() => _PredictionPageState();
+  State<PredictPage> createState() => _PredictPageState();
 }
 
-class _PredictionPageState extends State<PredictionPage> {
-  static const String apiUrl =
-      'https://linear-regression-life-expectancy.onrender.com/predict';
-
+class _PredictPageState extends State<PredictPage> {
   final _formKey = GlobalKey<FormState>();
-
-  // Controllers for each numeric field
-  final Map<String, TextEditingController> controllers = {
-    'year': TextEditingController(text: '2015'),
-    'infant_deaths': TextEditingController(),
-    'under_five_deaths': TextEditingController(),
-    'adult_mortality': TextEditingController(),
-    'alcohol_consumption': TextEditingController(),
-    'hepatitis_b': TextEditingController(),
-    'measles': TextEditingController(),
-    'bmi': TextEditingController(),
-    'polio': TextEditingController(),
-    'diphtheria': TextEditingController(),
-    'incidents_hiv': TextEditingController(),
-    'gdp_per_capita': TextEditingController(),
-    'population_mln': TextEditingController(),
-    'thinness_ten_nineteen_years': TextEditingController(),
-    'thinness_five_nine_years': TextEditingController(),
-    'schooling': TextEditingController(),
-  };
-
-  // Field metadata: label, min, max
-  final List<Map<String, dynamic>> fields = [
-    {'key': 'year', 'label': 'Year', 'min': 2000, 'max': 2030},
-    {'key': 'infant_deaths', 'label': 'Infant deaths (per 1000)', 'min': 0, 'max': 150},
-    {'key': 'under_five_deaths', 'label': 'Under-five deaths (per 1000)', 'min': 0, 'max': 230},
-    {'key': 'adult_mortality', 'label': 'Adult mortality rate', 'min': 0, 'max': 750},
-    {'key': 'alcohol_consumption', 'label': 'Alcohol consumption (L)', 'min': 0, 'max': 20},
-    {'key': 'hepatitis_b', 'label': 'Hepatitis B immunization (%)', 'min': 0, 'max': 100},
-    {'key': 'measles', 'label': 'Measles immunization (%)', 'min': 0, 'max': 100},
-    {'key': 'bmi', 'label': 'Average BMI', 'min': 15, 'max': 35},
-    {'key': 'polio', 'label': 'Polio immunization (%)', 'min': 0, 'max': 100},
-    {'key': 'diphtheria', 'label': 'Diphtheria immunization (%)', 'min': 0, 'max': 100},
-    {'key': 'incidents_hiv', 'label': 'HIV incidents (per 1000)', 'min': 0, 'max': 25},
-    {'key': 'gdp_per_capita', 'label': 'GDP per capita (USD)', 'min': 0, 'max': 120000},
-    {'key': 'population_mln', 'label': 'Population (millions)', 'min': 0, 'max': 1500},
-    {'key': 'thinness_ten_nineteen_years', 'label': 'Thinness % (ages 10-19)', 'min': 0, 'max': 30},
-    {'key': 'thinness_five_nine_years', 'label': 'Thinness % (ages 5-9)', 'min': 0, 'max': 30},
-    {'key': 'schooling', 'label': 'Average years of schooling', 'min': 0, 'max': 16},
-  ];
-
-  final List<String> regions = const [
-    'Africa',
-    'Asia',
-    'Central America and Caribbean',
-    'European Union',
-    'Middle East',
-    'North America',
-    'Oceania',
-    'Rest of Europe',
-    'South America',
-  ];
-
-  String? selectedRegion;
-  int economyStatus = 0; // 0 = Developing, 1 = Developed
-
-  bool isLoading = false;
-  String resultText = '';
-  bool isError = false;
+  final controllers = {for (var f in fields) f[0] as String: TextEditingController()};
+  String? region;
+  int economyDeveloped = 0;
+  String result = '';
+  bool loading = false;
+  bool error = false;
 
   Future<void> predict() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-    if (selectedRegion == null) {
+    if (!_formKey.currentState!.validate() || region == null) {
       setState(() {
-        isError = true;
-        resultText = 'Please select a region before predicting.';
+        error = true;
+        result = region == null ? 'Please select a region.' : '';
       });
       return;
     }
+    setState(() { loading = true; result = ''; });
 
-    setState(() {
-      isLoading = true;
-      resultText = '';
-      isError = false;
-    });
-
-    final Map<String, dynamic> body = {
-      'year': int.parse(controllers['year']!.text),
-      'infant_deaths': double.parse(controllers['infant_deaths']!.text),
-      'under_five_deaths': double.parse(controllers['under_five_deaths']!.text),
-      'adult_mortality': double.parse(controllers['adult_mortality']!.text),
-      'alcohol_consumption': double.parse(controllers['alcohol_consumption']!.text),
-      'hepatitis_b': double.parse(controllers['hepatitis_b']!.text),
-      'measles': double.parse(controllers['measles']!.text),
-      'bmi': double.parse(controllers['bmi']!.text),
-      'polio': double.parse(controllers['polio']!.text),
-      'diphtheria': double.parse(controllers['diphtheria']!.text),
-      'incidents_hiv': double.parse(controllers['incidents_hiv']!.text),
-      'gdp_per_capita': double.parse(controllers['gdp_per_capita']!.text),
-      'population_mln': double.parse(controllers['population_mln']!.text),
-      'thinness_ten_nineteen_years':
-          double.parse(controllers['thinness_ten_nineteen_years']!.text),
-      'thinness_five_nine_years':
-          double.parse(controllers['thinness_five_nine_years']!.text),
-      'schooling': double.parse(controllers['schooling']!.text),
-      'economy_status_developed': economyStatus,
-      'region': selectedRegion,
+    final body = {
+      for (var f in fields)
+        f[0]: f[0] == 'year' ? int.parse(controllers[f[0]]!.text) : double.parse(controllers[f[0]]!.text),
+      'economy_status_developed': economyDeveloped,
+      'region': region,
     };
 
     try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          isError = false;
-          resultText =
-              '${data['predicted_life_expectancy']} years';
-        });
-      } else {
-        final data = jsonDecode(response.body);
-        setState(() {
-          isError = true;
-          resultText = 'Error: ${data['detail'].toString()}';
-        });
-      }
-    } catch (e) {
+      final res = await http.post(Uri.parse(apiUrl),
+          headers: {'Content-Type': 'application/json'}, body: jsonEncode(body));
+      final data = jsonDecode(res.body);
       setState(() {
-        isError = true;
-        resultText = 'Could not reach the server. Check your internet connection.';
+        error = res.statusCode != 200;
+        result = error ? 'Error: ${data['detail']}' : '${data['predicted_life_expectancy']} years';
       });
+    } catch (_) {
+      setState(() { error = true; result = 'Could not reach the server.'; });
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => loading = false);
     }
   }
 
   @override
-  void dispose() {
-    for (final c in controllers.values) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Life Expectancy Predictor'),
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
-      ),
-      body: SafeArea(
-        child: Form(
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(title: const Text('Life Expectancy Predictor'), backgroundColor: Colors.teal, foregroundColor: Colors.white),
+        body: Form(
           key: _formKey,
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              const Text(
-                'Enter health and economic indicators to predict life expectancy.',
-                style: TextStyle(fontSize: 14, color: Colors.black54),
-              ),
-              const SizedBox(height: 16),
-
-              // Region dropdown
               DropdownButtonFormField<String>(
-                initialValue: selectedRegion,
-                decoration: const InputDecoration(labelText: 'Region'),
-                items: regions
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                    .toList(),
-                onChanged: (value) => setState(() => selectedRegion = value),
-                validator: (value) => value == null ? 'Required' : null,
+                initialValue: region,
+                decoration: const InputDecoration(labelText: 'Region', border: OutlineInputBorder()),
+                items: regions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+                onChanged: (v) => setState(() => region = v),
               ),
               const SizedBox(height: 12),
-
-              // Economy status dropdown
               DropdownButtonFormField<int>(
-                initialValue: economyStatus,
-                decoration: const InputDecoration(labelText: 'Economy status'),
-                items: const [
-                  DropdownMenuItem(value: 0, child: Text('Developing')),
-                  DropdownMenuItem(value: 1, child: Text('Developed')),
-                ],
-                onChanged: (value) => setState(() => economyStatus = value ?? 0),
+                initialValue: economyDeveloped,
+                decoration: const InputDecoration(labelText: 'Economy status', border: OutlineInputBorder()),
+                items: const [DropdownMenuItem(value: 0, child: Text('Developing')), DropdownMenuItem(value: 1, child: Text('Developed'))],
+                onChanged: (v) => setState(() => economyDeveloped = v ?? 0),
               ),
               const SizedBox(height: 12),
-
-              // Numeric fields
-              ...fields.map((field) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: TextFormField(
-                    controller: controllers[field['key']],
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: '${field['label']} (${field['min']}-${field['max']})',
+              ...fields.map((f) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: TextFormField(
+                      controller: controllers[f[0]],
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(labelText: '${f[1]} (${f[2]}-${f[3]})', border: const OutlineInputBorder()),
+                      validator: (v) {
+                        final n = num.tryParse(v ?? '');
+                        if (n == null) return 'Required';
+                        if (n < (f[2] as num) || n > (f[3] as num)) return 'Must be ${f[2]}-${f[3]}';
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Required';
-                      }
-                      final num? parsed = num.tryParse(value);
-                      if (parsed == null) {
-                        return 'Enter a valid number';
-                      }
-                      if (parsed < field['min'] || parsed > field['max']) {
-                        return 'Must be between ${field['min']} and ${field['max']}';
-                      }
-                      return null;
-                    },
-                  ),
-                );
-              }),
-
-              const SizedBox(height: 8),
+                  )),
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: isLoading ? null : predict,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text('Predict', style: TextStyle(fontSize: 16)),
+                  onPressed: loading ? null : predict,
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
+                  child: loading ? const CircularProgressIndicator(color: Colors.white) : const Text('Predict'),
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Result display
-              if (resultText.isNotEmpty)
+              if (result.isNotEmpty)
                 Container(
-                  width: double.infinity,
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isError ? Colors.red.shade50 : Colors.teal.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isError ? Colors.red.shade200 : Colors.teal.shade200,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isError ? 'Error' : 'Predicted Life Expectancy',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: isError ? Colors.red.shade800 : Colors.teal.shade800,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        resultText,
-                        style: TextStyle(
-                          fontSize: isError ? 14 : 22,
-                          color: isError ? Colors.red.shade800 : Colors.teal.shade900,
-                          fontWeight: isError ? FontWeight.normal : FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+                  color: error ? Colors.red.shade50 : Colors.teal.shade50,
+                  child: Text(result, style: TextStyle(fontSize: 18, color: error ? Colors.red.shade800 : Colors.teal.shade900)),
                 ),
-              const SizedBox(height: 24),
             ],
           ),
         ),
-      ),
-    );
-  }
+      );
 }
